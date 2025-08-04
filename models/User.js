@@ -1,5 +1,9 @@
 // mongoose 모듈 불러오기
 const mongoose = require("mongoose");
+// bcrypt 모듈 (비밀번호 암호화 라이브러리)
+const bcrypt = require("bcrypt");
+// saltRounds는 암호화 강도 (10이면 충분)
+const saltRounds = 10;
 
 // 사용자 정보를 정의할 스키마 생성
 const userSchema = mongoose.Schema({
@@ -31,6 +35,28 @@ const userSchema = mongoose.Schema({
   tokenExp: {
     type: Number,
   },
+});
+
+// 비밀번호 암호화 로직 (저장 전에 실행됨)
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  // 비밀번호 필드가 수정될 때만 암호화
+  if (user.isModified("password")) {
+    // 비밀번호를 암호화 시킨다
+    bcrypt.genSalt(saltRounds, function (err, salt) {
+      if (err) return next(err);
+
+      // 비밀번호 + salt -> 암호화 해시 생성
+      bcrypt.hash(user.password, salt, function (err, hash) {
+        if (err) return next(err);
+
+        // 암호화된 해시로 비밀번호 대체
+        user.password = hash;
+        next(); // 다음 미들웨어 또는 저장으로 진행
+      });
+    });
+  }
 });
 
 // 위에서 정의한 스키마를 바탕으로 'User' 모델 생성
