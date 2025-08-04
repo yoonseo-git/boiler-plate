@@ -3,6 +3,7 @@ const express = require("express");
 // Mongoose : 간단하게 몽고DB를 편하게 쓸 수 있는 Object Modeling Tool
 // npm install mongoose --save
 const mongoose = require("mongoose");
+const config = require("./config/key");
 const { User } = require("./models/User");
 
 // 서버 앱 초기화
@@ -15,9 +16,7 @@ app.use(express.urlencoded({ extended: true })); // application/x-www-form-urlen
 
 // MongoDB 연결 (mongoose 사용)
 mongoose
-  .connect(
-    "mongodb+srv://admin:chduddnd12@youtubeclone.p97xspl.mongodb.net/?retryWrites=true&w=majority&appName=YouTubeClone"
-  )
+  .connect(config.mongoURI)
   .then(() => console.log("MongoDB Connected..."))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
