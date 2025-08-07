@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 // saltRounds는 암호화 강도 (10이면 충분)
 const saltRounds = 10;
+// jsonwebtoken 불러오기
+const jwt = require("jsonwebtoken");
 
 // 사용자 정보를 정의할 스키마 생성
 const userSchema = mongoose.Schema({
@@ -56,8 +58,26 @@ userSchema.pre("save", function (next) {
         next(); // 다음 미들웨어 또는 저장으로 진행
       });
     });
+  } else {
+    next();
   }
 });
+
+userSchema.methods.comparePassword = function (plainPassword) {
+  // plainPassword 1234567    암호화된 password
+  return bcrypt.compare(plainPassword, this.password);
+};
+
+userSchema.methods.generateToken = async function () {
+  const user = this;
+
+  // jsonwebtoken을 이용해서 토큰을 생성하기
+  const token = jwt.sign({ _id: user._id.toHexString() }, "secretToken");
+
+  user.token = token;
+  await user.save();
+  return user;
+};
 
 // 위에서 정의한 스키마를 바탕으로 'User' 모델 생성
 // => 실제 DB 컬렉션은 'users'로 자동 생성됨(소문자 + 복수형)
